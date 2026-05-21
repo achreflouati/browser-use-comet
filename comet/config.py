@@ -22,8 +22,8 @@ for _d in [SCREENSHOTS_DIR, DOWNLOADS_DIR, MEMORY_DIR, LOGS_DIR, DATA_DIR]:
 
 # ── Gemini (Google AI Studio) ──────────────────────────────────
 GEMINI_API_KEY       = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL         = "gemini-2.5-pro-preview-05-06"
-GEMINI_VISION_MODEL  = "gemini-2.5-pro-preview-05-06"
+GEMINI_MODEL         = "gemini-2.0-flash"
+GEMINI_VISION_MODEL  = "gemini-2.0-flash"
 LLM_TEMPERATURE      = 0.1
 LLM_MAX_TOKENS       = 8192
 
