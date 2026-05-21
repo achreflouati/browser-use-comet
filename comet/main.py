@@ -1,5 +1,5 @@
 """
-Comet — Main entry point.
+Comet - Main entry point.
 Wires browser-use + Gemini 2.5 + Chrome persistent profile
 + Vision + Memory + Filesystem tools into one unified agent.
 """
@@ -15,7 +15,7 @@ from rich.prompt import Prompt
 load_dotenv()
 
 from browser_use import Agent
-from browser_use.browser.browser import Browser, BrowserConfig
+from browser_use.browser import BrowserProfile, BrowserSession
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from comet.utils.logger import CometLogger
@@ -60,12 +60,12 @@ class CometAgent:
             temperature    = 0.1,
         )
 
-        ctx_kwargs  = get_persistent_context_kwargs()
-        browser_cfg = BrowserConfig(
-            headless             = False,
-            chrome_instance_path = ctx_kwargs.get("executable_path"),
+        ctx_kwargs = get_persistent_context_kwargs()
+        profile = BrowserProfile(
+            headless        = False,
+            executable_path = ctx_kwargs.get("executable_path"),
         )
-        self.browser = Browser(config=browser_cfg)
+        self.browser = BrowserSession(browser_profile=profile)
 
     async def run(self, task: str) -> str:
         console.print(Panel(
@@ -84,7 +84,7 @@ class CometAgent:
         agent = Agent(
             task                 = enriched_task,
             llm                  = self.llm,
-            browser              = self.browser,
+            browser_session      = self.browser,
             max_actions_per_step = MAX_REACT_ITERATIONS,
         )
 
@@ -98,7 +98,7 @@ class CometAgent:
             self.logger.error(f"Erreur agent : {e}")
             return f"ERREUR : {e}"
         finally:
-            await self.browser.close()
+            await self.browser.stop()
 
 
 async def main():
