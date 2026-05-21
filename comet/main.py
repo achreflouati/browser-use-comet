@@ -1,6 +1,6 @@
 """
 Comet - Main entry point.
-Wires browser-use + Gemini 2.5 + Chrome persistent profile
+Wires browser-use + Gemini 2.0 Flash + Chrome persistent profile
 + Vision + Memory + Filesystem tools into one unified agent.
 """
 from __future__ import annotations
@@ -37,7 +37,7 @@ class CometAgent:
     """
     Comet = browser-use Agent
             + Chrome persistent profile   (zero 2FA)
-            + Gemini 2.5 Pro              (reasoning + vision)
+            + Gemini 2.0 Flash            (reasoning + vision)
             + ChromaDB memory             (long-term context)
             + FileSystemTools             (Excel / Word / PDF)
     """
@@ -55,16 +55,18 @@ class CometAgent:
         )
         self.fs = FileSystemTools(logger=self.logger)
 
-        # Use browser-use native Google LLM (compatible with llm.provider check)
+        # Use browser-use native Google LLM
         os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
         self.llm = ChatGoogle(model=GEMINI_MODEL)
 
         ctx_kwargs = get_persistent_context_kwargs()
-        profile = BrowserProfile(
+        self._profile = BrowserProfile(
             headless        = False,
             executable_path = ctx_kwargs.get("executable_path"),
         )
-        self.browser = BrowserSession(browser_profile=profile)
+
+    def _new_browser(self) -> BrowserSession:
+        return BrowserSession(browser_profile=self._profile)
 
     async def run(self, task: str) -> str:
         console.print(Panel(
@@ -80,10 +82,12 @@ class CometAgent:
             else task
         )
 
+        browser = self._new_browser()
+
         agent = Agent(
             task                 = enriched_task,
             llm                  = self.llm,
-            browser_session      = self.browser,
+            browser_session      = browser,
             max_actions_per_step = MAX_REACT_ITERATIONS,
         )
 
@@ -97,13 +101,16 @@ class CometAgent:
             self.logger.error(f"Erreur agent : {e}")
             return f"ERREUR : {e}"
         finally:
-            await self.browser.stop()
+            try:
+                await browser.stop()
+            except Exception:
+                pass
 
 
 async def main():
     console.print(Panel(
         "[bold cyan]COMET[/] - Agent de Navigation Web IA\n"
-        "[dim]browser-use + Gemini 2.5 Pro + Chrome Profile + Vision + Memory[/]",
+        "[dim]browser-use + Gemini 2.0 Flash + Chrome Profile + Vision + Memory[/]",
         border_style="cyan",
         title="Bienvenue",
     ))
