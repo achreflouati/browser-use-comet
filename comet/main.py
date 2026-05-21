@@ -6,6 +6,7 @@ Wires browser-use + Gemini 2.5 + Chrome persistent profile
 from __future__ import annotations
 
 import asyncio
+import os
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -16,7 +17,7 @@ load_dotenv()
 
 from browser_use import Agent
 from browser_use.browser import BrowserProfile, BrowserSession
-from langchain_google_genai import ChatGoogleGenerativeAI
+from browser_use.llm.google.chat import ChatGoogle
 
 from comet.utils.logger import CometLogger
 from comet.utils.chrome_profile import get_persistent_context_kwargs
@@ -54,11 +55,9 @@ class CometAgent:
         )
         self.fs = FileSystemTools(logger=self.logger)
 
-        self.llm = ChatGoogleGenerativeAI(
-            model          = GEMINI_MODEL,
-            google_api_key = GEMINI_API_KEY,
-            temperature    = 0.1,
-        )
+        # Use browser-use native Google LLM (compatible with llm.provider check)
+        os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+        self.llm = ChatGoogle(model=GEMINI_MODEL)
 
         ctx_kwargs = get_persistent_context_kwargs()
         profile = BrowserProfile(
